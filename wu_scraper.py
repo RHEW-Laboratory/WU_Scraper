@@ -227,10 +227,8 @@ def _end_message():
 
 def main():
     airport = input("Enter Airport Code: (ex. SFO): ")
-    # start_date = input("Enter a start date (YYYY-MM-DD): ")
-    # end_date = input("Enter a start date (YYYY-MM-DD): ")
-    start_date = '1948-01-01'
-    end_date = '2017-02-12'
+    start_date = input("Enter a start date (YYYY-MM-DD): ")
+    end_date = input("Enter a start date (YYYY-MM-DD): ")
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         airport.upper(), start_date, end_date
     )
