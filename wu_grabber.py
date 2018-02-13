@@ -1,5 +1,51 @@
+#!/usr/bin/python
+"""
+Title: Weather Underground Grabber
+author: Lawerence Lee
+
+Description: This program scrapes airport weather data stored on Weather
+Undergrounds website. The data will outputed into a csv file and be named
+with the aiport code and dates provided.
+
+Parameters
+----------
+airport : str
+    The code that designates a particular airport (ex. SFO is the airport
+    code for San Francisco International).
+start_date : str
+    The date you'd like to start scraping data from.
+end_date : str
+    The final date you'd like to scrape data from.
+
+Generates
+-------
+A csv containing the weather data you requested.
+
+
+Copyright (c) 2018 LawerenceLee
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import bs4
 import csv
+import os
 import re
 import requests
 
@@ -21,6 +67,11 @@ MONTH_DICT = {
     'may': '05', 'jun': '06', 'jul': '07', 'aug': '08',
     'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12',
 }
+
+
+def clear():
+    """Clears the command prompt"""
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def _url_builder(airport, start_date, end_date):
@@ -74,13 +125,15 @@ def _build_row(td_tags, date):
     return row_vals
 
 
-def write_headers(fieldnames):
+def _write_headers(fieldnames, OUTPUT_FILENAME):
+    """Writes the column headers to the csv."""
     with open(OUTPUT_FILENAME, 'w') as csv_file:
         headerWriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
         headerWriter.writeheader()
 
 
-def _row_writer(row, fieldnames):
+def _row_writer(row, fieldnames, OUTPUT_FILENAME):
+    """Writes each row of data to the csv."""
     with open(OUTPUT_FILENAME, 'a') as csv_file:
         rowWriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
@@ -109,10 +162,10 @@ def _row_writer(row, fieldnames):
         })
 
 
-def _extract_table(soup_obj):
-    """Parses Soup object to find each row within the 'Weather History
-    & Observations` HTML table of a particular Weather Underground Custom
-    History page.
+def _extract_table(soup_obj, OUTPUT_FILENAME):
+    """Parses Soup object to find each row of data within the 'Weather History
+    & Observations` HTML table of a particular airport's Weather Underground
+    Custom History page.
     """
     year = int
     month = str
@@ -132,25 +185,63 @@ def _extract_table(soup_obj):
                     day = _check_day_str(first_tag)
                     date = '{}-{}-{}'.format(year, MONTH_DICT[month], day)
                     row = _build_row(td_tags, date)
-                    _row_writer(row, FIELDNAMES)
+                    _row_writer(row, FIELDNAMES, OUTPUT_FILENAME)
+                    print(row)
+    return row[0]
+
+
+def _check_date_match(soup_obj, last_date, end_date):
+    """Checks if the last date added to the csv matches the value entered for
+    'end_date'.
+    """
+    if last_date == end_date:
+        return True, last_date
+    else:
+        return False, last_date
+
+
+def _start_message():
+    """Writes and says a starting download message."""
+    clear()
+    print('Starting Download')
+    try:
+        os.system("say 'Starting download'")
+    except Exception as e:
+        print(e, '\n')
+        print("SCRIPT IS NOT BROKEN, DON't WORRY")
+
+
+def _end_message():
+    """Writes and says a finished download message."""
+    clear()
+    print("Finished Download")
+    try:
+        os.system("say 'Download Complete'")
+    except Exception:
+        pass
 
 
 def main():
-    url = _url_builder(airport, start_date, end_date)
-    soup_obj = _scrape_the_underground(url)
-    write_headers(FIELDNAMES)
-    _extract_table(soup_obj)
-
-
-if __name__ == "__main__":
-    # airport = input("Enter Airport Code: (ex. SFO): ")
-    # start_date = input("Enter a start date (YYYY-MM-DD): ")
-    # end_date = input("Enter a start date (YYYY-MM-DD): ")
-    
-    airport = "KLIT"
-    start_date = '1948-01-01'
-    end_date = '2017-02-01'
+    airport = input("Enter Airport Code: (ex. SFO): ")
+    start_date = input("Enter a start date (YYYY-MM-DD): ")
+    end_date = input("Enter a start date (YYYY-MM-DD): ")
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         airport.upper(), start_date, end_date
     )
+
+    _write_headers(FIELDNAMES, OUTPUT_FILENAME)
+    _start_message()
+    date_match = False
+    while date_match is False:
+        url = _url_builder(airport, start_date, end_date)
+        soup_obj = _scrape_the_underground(url)
+        last_date = _extract_table(soup_obj, OUTPUT_FILENAME)
+        date_match, start_date = _check_date_match(
+            soup_obj, last_date, end_date
+        )
+    _end_message()
+
+
+if __name__ == "__main__":
+    clear()
     main()
