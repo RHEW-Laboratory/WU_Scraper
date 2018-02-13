@@ -6,7 +6,7 @@ Author: Lawerence Lee
 
 ## Description
 
-This program scrapes airport weather data stored on Weather Underground's website. The data is outputed to a csv file and will 
+This program scrapes airport weather data stored on Weather Underground's website. The data is output to a csv file and will 
 be named with the aiport code and dates provided.
 
 ```
