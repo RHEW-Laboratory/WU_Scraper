@@ -1,8 +1,14 @@
 # WU_Scraper
 
-Title: Weather Underground Grabber
+Title: Weather Underground Scraper
 
 Author: Lawerence Lee
+
+## Airport Code --> Airport
+
+* KLIT --> Little Rock National Airport
+* KTRK --> Truckee Tahoe Airport
+* SFO  --> San Francisco International Airport
 
 ## Description
 
