@@ -23,6 +23,22 @@ MONTH_DICT = {
 
 
 def _url_builder(airport, start_date, end_date):
+    """Accepts three mandatory parameters airport, start_date, and end_date.
+    These are used to construct a Weather Underground Specific URL.
+    """
+    # base_url = 'https://www.wunderground.com/history/airport/'
+
+    # airport = airport.upper()
+    # s_year, s_month, s_day = start_date.split('-')
+    # e_year, e_month, e_day = end_date.split('-')
+
+    # url = base_url + "{}/{}/{}/{}".format(
+    #     airport, s_year, int(s_month), int(s_day)
+    # )
+    # url += 'CustomHistory.html?dayend={}&monthend={}&yearend={}'.format(
+    #     int(e_day), int(e_month), e_year
+    # )
+
     url = 'https://www.wunderground.com/history/airport/KLIT/1948/2/12/CustomHistory.html?dayend=12&monthend=2&yearend=2018&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo='
     return url
     
@@ -91,7 +107,7 @@ def main():
 
 
 if __name__ == "__main__":
-    # airport = input("Enter Airport Code: (ex. SFO): ").upper()
+    # airport = input("Enter Airport Code: (ex. SFO): ")
     # start_date = input("Enter a start date (YYYY-MM-DD): ")
     # end_date = input("Enter a start date (YYYY-MM-DD): ")
     main()
