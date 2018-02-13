@@ -45,6 +45,7 @@ SOFTWARE.
 
 import bs4
 import csv
+import datetime
 import os
 import re
 import requests
@@ -197,7 +198,10 @@ def _check_date_match(last_date, end_date):
     if last_date == end_date:
         return True, last_date
     else:
-        return False, last_date
+        last_date = datetime.datetime.strptime(last_date, '%Y-%m-%d')
+        new_start = last_date + datetime.timedelta(days=1)
+        new_start = new_start.strftime('%Y-%m-%d')
+        return False, new_start
 
 
 def _start_message():
@@ -223,8 +227,10 @@ def _end_message():
 
 def main():
     airport = input("Enter Airport Code: (ex. SFO): ")
-    start_date = input("Enter a start date (YYYY-MM-DD): ")
-    end_date = input("Enter a start date (YYYY-MM-DD): ")
+    # start_date = input("Enter a start date (YYYY-MM-DD): ")
+    # end_date = input("Enter a start date (YYYY-MM-DD): ")
+    start_date = '1948-01-01'
+    end_date = '2017-02-12'
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         airport.upper(), start_date, end_date
     )
