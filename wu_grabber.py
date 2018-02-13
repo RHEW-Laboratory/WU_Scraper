@@ -190,7 +190,7 @@ def _extract_table(soup_obj, OUTPUT_FILENAME):
     return row[0]
 
 
-def _check_date_match(soup_obj, last_date, end_date):
+def _check_date_match(last_date, end_date):
     """Checks if the last date added to the csv matches the value entered for
     'end_date'.
     """
@@ -237,7 +237,7 @@ def main():
         soup_obj = _scrape_the_underground(url)
         last_date = _extract_table(soup_obj, OUTPUT_FILENAME)
         date_match, start_date = _check_date_match(
-            soup_obj, last_date, end_date
+            last_date, end_date
         )
     _end_message()
 
