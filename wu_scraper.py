@@ -4,7 +4,7 @@ Title: Weather Underground Grabber
 author: Lawerence Lee
 
 Description: This program scrapes airport weather data stored on Weather
-Undergrounds website. The data will outputed into a csv file and be named
+Underground's website. The data will output into a csv file and be named
 with the aiport code and dates provided.
 
 Parameters
@@ -18,7 +18,7 @@ end_date : str
     The final date you'd like to scrape data from.
 
 Generates
--------
+---------
 A csv containing the weather data you requested.
 
 
