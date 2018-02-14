@@ -169,6 +169,7 @@ def _row_writer(row):
             'total_precip_in': row[19],
             'events': row[20],
         })
+        print(row)
 
 
 def _extract_table(soup_obj, row):
@@ -185,13 +186,12 @@ def _extract_table(soup_obj, row):
     # print(len(table.contents))
     # input()
     while table is None or len(table.contents) == 1:
-        row[0] = _add_one_day(row[0])
         blank_row = [
             row[0], '-', '-', '-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-', '-', '',
         ]
         _row_writer(blank_row)
-        print(blank_row)
+        row[0] = _add_one_day(row[0])
         START_DATE = _add_one_day(row[0])
         URL = _url_builder(AIRPORT, START_DATE, END_DATE)
         soup_obj = _scrape_the_underground(URL)
@@ -211,7 +211,6 @@ def _extract_table(soup_obj, row):
                     date = '{}-{}-{}'.format(year, MONTH_DICT[month], day)
                     row = _build_row(td_tags, date)
                     _row_writer(row)
-                    print(row)
     return row[0], row
 
 
