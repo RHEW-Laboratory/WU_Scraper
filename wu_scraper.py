@@ -145,7 +145,7 @@ def _row_writer(row):
     """Writes each row of data to the csv."""
     with open(OUTPUT_FILENAME, 'a') as csv_file:
         rowWriter = csv.DictWriter(csv_file, fieldnames=FIELDNAMES)
-
+        row = ['' if item == '-' else item for item in row]
         rowWriter.writerow({
             'date': row[0],
             'high_temp_ºF': row[1],
@@ -169,6 +169,7 @@ def _row_writer(row):
             'total_precip_in': row[19],
             'events': row[20],
         })
+        print(row)
 
 
 def _extract_table(soup_obj, row):
@@ -187,8 +188,8 @@ def _extract_table(soup_obj, row):
     while table is None or len(table.contents) == 1:
         row[0] = _add_one_day(row[0])
         blank_row = [
-            row[0], '-', '-', '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-', '-', '',
+            row[0], '', '', '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '', '', '',
         ]
         _row_writer(blank_row)
         print(blank_row)
@@ -211,7 +212,6 @@ def _extract_table(soup_obj, row):
                     date = '{}-{}-{}'.format(year, MONTH_DICT[month], day)
                     row = _build_row(td_tags, date)
                     _row_writer(row)
-                    print(row)
     return row[0], row
 
 
@@ -270,12 +270,12 @@ def main(AIRPORT, START_DATE, END_DATE):
 
 
 if __name__ == "__main__":
-    AIRPORT = input("Enter Airport Code: (ex. SFO): ")
-    START_DATE = input("Enter a start date (YYYY-MM-DD): ")
-    END_DATE = input("Enter an end date (YYYY-MM-DD): ")
-    # AIRPORT = 'KOAK'
-    # START_DATE = '1943-01-01'
-    # END_DATE = '2017-02-12'
+    # AIRPORT = input("Enter Airport Code: (ex. SFO): ")
+    # START_DATE = input("Enter a start date (YYYY-MM-DD): ")
+    # END_DATE = input("Enter an end date (YYYY-MM-DD): ")
+    AIRPORT = 'KSFO'
+    START_DATE = '1948-01-01'
+    END_DATE = '2017-02-13'
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         AIRPORT.upper(), START_DATE, END_DATE
     )
