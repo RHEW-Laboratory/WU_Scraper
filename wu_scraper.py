@@ -270,12 +270,12 @@ def main(AIRPORT, START_DATE, END_DATE):
 
 
 if __name__ == "__main__":
-    # AIRPORT = input("Enter Airport Code: (ex. SFO): ")
-    # START_DATE = input("Enter a start date (YYYY-MM-DD): ")
-    # END_DATE = input("Enter an end date (YYYY-MM-DD): ")
-    AIRPORT = 'KOAK'
-    START_DATE = '1943-01-01'
-    END_DATE = '2017-02-12'
+    AIRPORT = input("Enter Airport Code: (ex. SFO): ")
+    START_DATE = input("Enter a start date (YYYY-MM-DD): ")
+    END_DATE = input("Enter an end date (YYYY-MM-DD): ")
+    # AIRPORT = 'KOAK'
+    # START_DATE = '1943-01-01'
+    # END_DATE = '2017-02-12'
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         AIRPORT.upper(), START_DATE, END_DATE
     )
