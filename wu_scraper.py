@@ -186,13 +186,12 @@ def _extract_table(soup_obj, row):
     # print(len(table.contents))
     # input()
     while table is None or len(table.contents) == 1:
-        row[0] = _add_one_day(row[0])
         blank_row = [
-            row[0], '', '', '', '', '', '', '', '', '', '',
-            '', '', '', '', '', '', '', '', '', '',
+            row[0], '', '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '', '', '', '',
         ]
         _row_writer(blank_row)
-        print(blank_row)
+        row[0] = _add_one_day(row[0])
         START_DATE = _add_one_day(row[0])
         URL = _url_builder(AIRPORT, START_DATE, END_DATE)
         soup_obj = _scrape_the_underground(URL)
@@ -273,8 +272,8 @@ if __name__ == "__main__":
     # AIRPORT = input("Enter Airport Code: (ex. SFO): ")
     # START_DATE = input("Enter a start date (YYYY-MM-DD): ")
     # END_DATE = input("Enter an end date (YYYY-MM-DD): ")
-    AIRPORT = 'KSFO'
-    START_DATE = '1948-01-01'
+    AIRPORT = 'OAK'
+    START_DATE = '1943-01-01'
     END_DATE = '2017-02-13'
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         AIRPORT.upper(), START_DATE, END_DATE
