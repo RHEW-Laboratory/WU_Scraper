@@ -9,12 +9,12 @@ with the aiport code and dates provided.
 
 Parameters
 ----------
-airport : str
+AIRPORT : str
     The code that designates a particular airport (ex. SFO is the airport
     code for San Francisco International).
-start_date : str
+START_DATE : str
     The date you'd like to start scraping data from.
-end_date : str
+END_DATE : str
     The final date you'd like to scrape data from.
 
 Generates
@@ -51,6 +51,13 @@ import re
 import requests
 
 
+AIRPORT = str
+START_DATE = str
+END_DATE = str
+OUTPUT_FILENAME = ''
+URL = ''
+
+
 FIELDNAMES = [
     'date',
     'high_temp_ºF', 'ave_temp_ºF', 'low_temp_ºF',
@@ -75,23 +82,24 @@ def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
-def _url_builder(airport, start_date, end_date):
-    """Accepts three mandatory parameters airport, start_date, and end_date.
+def _url_builder(AIRPORT, START_DATE, END_DATE):
+    """Accepts three mandatory parameters AIRPORT, START_DATE, and END_DATE.
     These are used to construct a Weather Underground Specific URL, as well
     as set the filename for the csv that is produced by this script.
     """
-    airport = airport.upper()
-    s_year, s_month, s_day = start_date.split('-')
-    e_year, e_month, e_day = end_date.split('-')
+    AIRPORT = AIRPORT.upper()
+    s_year, s_month, s_day = START_DATE.split('-')
+    e_year, e_month, e_day = END_DATE.split('-')
 
     base_url = 'https://www.wunderground.com/history/airport/'
     url = base_url + "{}/{}/{}/{}".format(
-        airport, s_year, int(s_month), int(s_day)
+        AIRPORT, s_year, int(s_month), int(s_day)
     )
     url += '/CustomHistory.html?dayend={}&monthend={}&yearend={}'.format(
         int(e_day), int(e_month), e_year
     )
     url += '&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo='
+    # print(url)
     return url
 
 
@@ -126,17 +134,17 @@ def _build_row(td_tags, date):
     return row_vals
 
 
-def _write_headers(fieldnames, OUTPUT_FILENAME):
+def _write_headers():
     """Writes the column headers to the csv."""
     with open(OUTPUT_FILENAME, 'w') as csv_file:
-        headerWriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        headerWriter = csv.DictWriter(csv_file, fieldnames=FIELDNAMES)
         headerWriter.writeheader()
 
 
-def _row_writer(row, fieldnames, OUTPUT_FILENAME):
+def _row_writer(row):
     """Writes each row of data to the csv."""
     with open(OUTPUT_FILENAME, 'a') as csv_file:
-        rowWriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        rowWriter = csv.DictWriter(csv_file, fieldnames=FIELDNAMES)
 
         rowWriter.writerow({
             'date': row[0],
@@ -163,7 +171,7 @@ def _row_writer(row, fieldnames, OUTPUT_FILENAME):
         })
 
 
-def _extract_table(soup_obj, OUTPUT_FILENAME):
+def _extract_table(soup_obj, row):
     """Parses Soup object to find each row of data within the 'Weather History
     & Observations` HTML table of a particular airport's Weather Underground
     Custom History page.
@@ -173,6 +181,22 @@ def _extract_table(soup_obj, OUTPUT_FILENAME):
     day = int
 
     table = soup_obj.find(id='obsTable')
+    # print(table)
+    # print(len(table.contents))
+    # input()
+    while table is None or len(table.contents) == 1:
+        row[0] = _add_one_day(row[0])
+        blank_row = [
+            row[0], '-', '-', '-', '-', '-', '-', '-', '-', '-', '-',
+            '-', '-', '-', '-', '-', '-', '-', '-', '-', '',
+        ]
+        _row_writer(blank_row)
+        print(blank_row)
+        START_DATE = _add_one_day(row[0])
+        URL = _url_builder(AIRPORT, START_DATE, END_DATE)
+        soup_obj = _scrape_the_underground(URL)
+        table = soup_obj.find(id='obsTable')
+
     for tag in table.contents:
         if type(tag) == bs4.element.Tag:
             if tag.find('th'):
@@ -186,22 +210,27 @@ def _extract_table(soup_obj, OUTPUT_FILENAME):
                     day = _check_day_str(first_tag)
                     date = '{}-{}-{}'.format(year, MONTH_DICT[month], day)
                     row = _build_row(td_tags, date)
-                    _row_writer(row, FIELDNAMES, OUTPUT_FILENAME)
+                    _row_writer(row)
                     print(row)
-    return row[0]
+    return row[0], row
 
 
-def _check_date_match(last_date, end_date):
+def _check_date_match(last_date, END_DATE):
     """Checks if the last date added to the csv matches the value entered for
-    'end_date'.
+    'END_DATE'.
     """
-    if last_date == end_date:
+    if last_date == END_DATE:
         return True, last_date
     else:
-        last_date = datetime.datetime.strptime(last_date, '%Y-%m-%d')
-        new_start = last_date + datetime.timedelta(days=1)
-        new_start = new_start.strftime('%Y-%m-%d')
+        new_start = _add_one_day(last_date)
         return False, new_start
+
+
+def _add_one_day(date):
+    date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    new_date = date + datetime.timedelta(days=1)
+    new_date = new_date.strftime('%Y-%m-%d')
+    return new_date
 
 
 def _start_message():
@@ -212,7 +241,7 @@ def _start_message():
         os.system("say 'Starting download'")
     except Exception as e:
         print(e, '\n')
-        print("SCRIPT IS NOT BROKEN, DON't WORRY")
+        print("SCRIPT IS NOT BROKEN, DON'T WORRY")
 
 
 def _end_message():
@@ -225,27 +254,30 @@ def _end_message():
         pass
 
 
-def main():
-    airport = input("Enter Airport Code: (ex. SFO): ")
-    start_date = input("Enter a start date (YYYY-MM-DD): ")
-    end_date = input("Enter a start date (YYYY-MM-DD): ")
-    OUTPUT_FILENAME = "{}_{}_{}.csv".format(
-        airport.upper(), start_date, end_date
-    )
-
-    _write_headers(FIELDNAMES, OUTPUT_FILENAME)
+def main(AIRPORT, START_DATE, END_DATE):
+    row = [START_DATE]
+    _write_headers()
     _start_message()
     date_match = False
     while date_match is False:
-        url = _url_builder(airport, start_date, end_date)
-        soup_obj = _scrape_the_underground(url)
-        last_date = _extract_table(soup_obj, OUTPUT_FILENAME)
-        date_match, start_date = _check_date_match(
-            last_date, end_date
+        URL = _url_builder(AIRPORT, START_DATE, END_DATE)
+        soup_obj = _scrape_the_underground(URL)
+        last_date, row = _extract_table(soup_obj, row)
+        date_match, START_DATE = _check_date_match(
+            last_date, END_DATE
         )
     _end_message()
 
 
 if __name__ == "__main__":
+    # AIRPORT = input("Enter Airport Code: (ex. SFO): ")
+    # START_DATE = input("Enter a start date (YYYY-MM-DD): ")
+    # END_DATE = input("Enter an end date (YYYY-MM-DD): ")
+    AIRPORT = 'KOAK'
+    START_DATE = '1943-01-01'
+    END_DATE = '2017-02-12'
+    OUTPUT_FILENAME = "{}_{}_{}.csv".format(
+        AIRPORT.upper(), START_DATE, END_DATE
+    )
     clear()
-    main()
+    main(AIRPORT, START_DATE, END_DATE)
