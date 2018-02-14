@@ -6,10 +6,9 @@ Author: Lawerence Lee
 
 ## Airport Code --> Airport
 
-* KLIT --> Little Rock National Airport, AR
 * KOAK --> Metro Oakland International, CA
 * KTRK --> Truckee Tahoe Airport, CA
-* SFO  --> San Francisco International Airport, CA
+* KSFO  --> San Francisco International Airport, CA
 
 ## Description
 
