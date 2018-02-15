@@ -6,10 +6,9 @@ Author: Lawerence Lee
 
 ## Airport Code --> Airport
 
-* KLIT --> Little Rock National Airport, AR
 * KOAK --> Metro Oakland International, CA
 * KTRK --> Truckee Tahoe Airport, CA
-* SFO  --> San Francisco International Airport, CA
+* KSFO  --> San Francisco International Airport, CA
 
 ## Description
 
@@ -19,14 +18,14 @@ be named with the aiport code and dates provided.
 ```
 Parameters
 ----------
-airport : str
+AIRPORT : str
     The code that designates a particular airport (ex. SFO is the airport
     code for San Francisco International).
-start_date : str
+START_DATE : str
     The date you'd like to start scraping data from.
-end_date : str
+END_DATE : str
     The final date you'd like to scrape data from.
-
+    
 Generates
 ---------
 A csv containing the weather data you requested.

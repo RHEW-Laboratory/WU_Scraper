@@ -197,6 +197,7 @@ def _extract_table(soup_obj, row):
             _end_message()
             exit()
         URL = _url_builder(AIRPORT, row[0], END_DATE)
+
         soup_obj = _scrape_the_underground(URL)
         table = soup_obj.find(id='obsTable')
 
