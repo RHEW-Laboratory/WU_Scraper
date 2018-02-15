@@ -47,11 +47,9 @@ import bs4
 import csv
 import datetime
 import os
-from queue import Queue
 import re
 import requests
 import time
-import threading
 
 
 AIRPORT = str
@@ -60,8 +58,6 @@ END_DATE = str
 OUTPUT_FILENAME = ''
 URL = ''
 BLANK_ROW = ['' for _ in range(21)]
-ROW_WRITER_LOCK = threading.Lock()
-QUEUE = Queue()
 START_TIME = time.time()
 
 
@@ -152,45 +148,30 @@ def _row_writer(row):
     """Writes each row of data to the csv."""
     with open(OUTPUT_FILENAME, 'a') as csv_file:
         rowWriter = csv.DictWriter(csv_file, fieldnames=FIELDNAMES)
-        with ROW_WRITER_LOCK:
-            rowWriter.writerow({
-                'date': row[0],
-                'high_temp_ºF': row[1],
-                'ave_temp_ºF': row[2],
-                'low_temp_ºF': row[3],
-                'high_dew_pt_ºF': row[4],
-                'ave_dew_pt_ºF': row[5],
-                'low_dew_pt_ºF': row[6],
-                'high_humidity_%': row[7],
-                'ave_humidity_%': row[8],
-                'low_humidity_%': row[9],
-                'high_sea_lvl_press_in': row[10],
-                'ave_sea_lvl_press_in': row[11],
-                'low_sea_lvl_press_in': row[12],
-                'high_visibitlity_mi': row[13],
-                'ave_visibitlity_mi': row[14],
-                'low_visibitlity_mi': row[15],
-                'high_wind_mph': row[16],
-                'ave_wind_mph': row[17],
-                'low_wind_mph': row[18],
-                'total_precip_in': row[19],
-                'events': row[20],
-            })
-            print(row)
-
-
-def _threader():
-    while True:
-        row = QUEUE.get()
-        _row_writer(row)
-        QUEUE.task_done()
-
-
-def _build_threaders():
-    for _ in range(10):
-        thread_obj = threading.Thread(target=_threader)
-        thread_obj.daemon = True
-        thread_obj.start()
+        rowWriter.writerow({
+            'date': row[0],
+            'high_temp_ºF': row[1],
+            'ave_temp_ºF': row[2],
+            'low_temp_ºF': row[3],
+            'high_dew_pt_ºF': row[4],
+            'ave_dew_pt_ºF': row[5],
+            'low_dew_pt_ºF': row[6],
+            'high_humidity_%': row[7],
+            'ave_humidity_%': row[8],
+            'low_humidity_%': row[9],
+            'high_sea_lvl_press_in': row[10],
+            'ave_sea_lvl_press_in': row[11],
+            'low_sea_lvl_press_in': row[12],
+            'high_visibitlity_mi': row[13],
+            'ave_visibitlity_mi': row[14],
+            'low_visibitlity_mi': row[15],
+            'high_wind_mph': row[16],
+            'ave_wind_mph': row[17],
+            'low_wind_mph': row[18],
+            'total_precip_in': row[19],
+            'events': row[20],
+        })
+        print(row)
 
 
 def _extract_table(soup_obj, row):
@@ -201,16 +182,16 @@ def _extract_table(soup_obj, row):
     year = int
     month = str
     day = int
-    threading_active = False
+    ran_once = False
 
     table = soup_obj.find(id='obsTable')
     while table is None or len(table.contents) == 1:
-        if threading_active is False:
-            _build_threaders()
-            threading_active = True
-
+        if ran_once is False:
+            row[0] = _add_one_day(row[0])
+            ran_once = True
+ 
         BLANK_ROW[0] = row[0]
-        QUEUE.put(BLANK_ROW)
+        _row_writer(BLANK_ROW)
         row[0] = _add_one_day(row[0])
         if row[0] == _add_one_day(END_DATE):
             _end_message()
