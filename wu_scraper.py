@@ -49,6 +49,7 @@ import datetime
 import os
 import re
 import requests
+import time
 
 
 AIRPORT = str
@@ -56,6 +57,8 @@ START_DATE = str
 END_DATE = str
 OUTPUT_FILENAME = ''
 URL = ''
+BLANK_ROW = ['' for _ in range(21)]
+START_TIME = time.time()
 
 
 FIELDNAMES = [
@@ -99,7 +102,6 @@ def _url_builder(AIRPORT, START_DATE, END_DATE):
         int(e_day), int(e_month), e_year
     )
     url += '&req_city=&req_state=&req_statename=&reqdb.zip=&reqdb.magic=&reqdb.wmo='
-    # print(url)
     return url
 
 
@@ -131,6 +133,7 @@ def _build_row(td_tags, date):
     row_vals[-1] = re.sub('\n', '', row_vals[-1])
     row_vals[-1] = re.sub('\t', '', row_vals[-1])
     row_vals[0] = date
+    row_vals = ['' if item == '-' else item for item in row_vals]
     return row_vals
 
 
@@ -145,7 +148,6 @@ def _row_writer(row):
     """Writes each row of data to the csv."""
     with open(OUTPUT_FILENAME, 'a') as csv_file:
         rowWriter = csv.DictWriter(csv_file, fieldnames=FIELDNAMES)
-
         rowWriter.writerow({
             'date': row[0],
             'high_temp_ºF': row[1],
@@ -180,20 +182,22 @@ def _extract_table(soup_obj, row):
     year = int
     month = str
     day = int
+    ran_once = False
 
     table = soup_obj.find(id='obsTable')
-    # print(table)
-    # print(len(table.contents))
-    # input()
     while table is None or len(table.contents) == 1:
-        blank_row = [
-            row[0], '-', '-', '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-', '-', '',
-        ]
-        _row_writer(blank_row)
+        if ran_once is False:
+            row[0] = _add_one_day(row[0])
+            ran_once = True
+ 
+        BLANK_ROW[0] = row[0]
+        _row_writer(BLANK_ROW)
         row[0] = _add_one_day(row[0])
-        START_DATE = _add_one_day(row[0])
-        URL = _url_builder(AIRPORT, START_DATE, END_DATE)
+        if row[0] == _add_one_day(END_DATE):
+            _end_message()
+            exit()
+        URL = _url_builder(AIRPORT, row[0], END_DATE)
+
         soup_obj = _scrape_the_underground(URL)
         table = soup_obj.find(id='obsTable')
 
@@ -227,9 +231,9 @@ def _check_date_match(last_date, END_DATE):
 
 def _add_one_day(date):
     date = datetime.datetime.strptime(date, '%Y-%m-%d')
-    new_date = date + datetime.timedelta(days=1)
-    new_date = new_date.strftime('%Y-%m-%d')
-    return new_date
+    date = date + datetime.timedelta(days=1)
+    date = date.strftime('%Y-%m-%d')
+    return date
 
 
 def _start_message():
@@ -246,11 +250,16 @@ def _start_message():
 def _end_message():
     """Writes and says a finished download message."""
     clear()
+    end_time = round(((time.time() - START_TIME) / 60), 2)
+    finish_msg = 'Entire Download took: {} minutes'.format(end_time)
     print("Finished Download")
+    print('Entire Download took: {} minutes'.format(end_time))
     try:
         os.system("say 'Download Complete'")
     except Exception:
         pass
+    else: 
+        os.system("say '{}'".format(finish_msg))
 
 
 def main(AIRPORT, START_DATE, END_DATE):
@@ -269,12 +278,12 @@ def main(AIRPORT, START_DATE, END_DATE):
 
 
 if __name__ == "__main__":
-    AIRPORT = input("Enter Airport Code: (ex. SFO): ")
-    START_DATE = input("Enter a start date (YYYY-MM-DD): ")
-    END_DATE = input("Enter an end date (YYYY-MM-DD): ")
-    # AIRPORT = 'KOAK'
-    # START_DATE = '1943-01-01'
-    # END_DATE = '2017-02-12'
+    # AIRPORT = input("Enter Airport Code: (ex. SFO): ")
+    # START_DATE = input("Enter a start date (YYYY-MM-DD): ")
+    # END_DATE = input("Enter an end date (YYYY-MM-DD): ")
+    AIRPORT = 'KOAK'
+    START_DATE = '1943-01-01'
+    END_DATE = '1944-01-01'
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         AIRPORT.upper(), START_DATE, END_DATE
     )
