@@ -1,4 +1,3 @@
-#!/usr/bin/python
 """
 Title: Weather Underground Grabber
 author: Lawerence Lee
@@ -174,10 +173,12 @@ def _row_writer(row):
         print(row)
 
 
-def _extract_table(soup_obj, row):
+def _extract_table(soup_obj, last_date):
     """Parses Soup object to find each row of data within the 'Weather History
     & Observations` HTML table of a particular airport's Weather Underground
     Custom History page.
+
+    If table is empty a blank row is inserted.
     """
     year = int
     month = str
@@ -185,28 +186,41 @@ def _extract_table(soup_obj, row):
     ran_once = False
 
     table = soup_obj.find(id='obsTable')
+    # While table is empty or just has the <table> HTML tag, run the
+    # following.
     while table is None or len(table.contents) == 1:
         if ran_once is False:
-            row[0] = _add_one_day(row[0])
+            # Inserts a day because the row that is being fed in as an
+            # argument above is for the previous day. row[0] is the date.
+            BLANK_ROW[0] = _add_one_day(last_date)
             ran_once = True
  
-        BLANK_ROW[0] = row[0]
+        # Keep in mind the row we are working with currently
+        # has not changed as we are in a while loop and have not exited
+        # the function at any time. We just keep increasing our 
+        # BLANK_ROWS date by one day.
         _row_writer(BLANK_ROW)
-        row[0] = _add_one_day(row[0])
-        if row[0] == _add_one_day(END_DATE):
+
+        BLANK_ROW[0] = _add_one_day(BLANK_ROW[0])
+        # If the current BLANK_ROW's date is one day after our END_DATE
+        # go directly to the end_message function and safely exit the program.
+        if BLANK_ROW[0] == _add_one_day(END_DATE):
             _end_message()
             exit()
-        URL = _url_builder(AIRPORT, row[0], END_DATE)
-
+        URL = _url_builder(AIRPORT, BLANK_ROW[0], END_DATE)
         soup_obj = _scrape_the_underground(URL)
         table = soup_obj.find(id='obsTable')
 
     for tag in table.contents:
         if type(tag) == bs4.element.Tag:
+            # If the tag contains header row tags
             if tag.find('th'):
                 year = tag.find('th').getText()
+            # If the tag is filled w/ at least one row of data
             elif tag.find('td'):
+                # find all the rows filled w/ data
                 td_tags = tag.find_all('td')
+                # first_tag is always either the month or the day
                 first_tag = td_tags[0].getText()
                 if len(first_tag) == 3:
                     month = first_tag.lower()
@@ -215,7 +229,10 @@ def _extract_table(soup_obj, row):
                     date = '{}-{}-{}'.format(year, MONTH_DICT[month], day)
                     row = _build_row(td_tags, date)
                     _row_writer(row)
-    return row[0], row
+    # return the date because we pass it back through this function just in
+    # case we encouter a table that is empty and therefore have a way to find
+    # out what day did we last entered into the csv.
+    return row[0]
 
 
 def _check_date_match(last_date, END_DATE):
@@ -230,6 +247,7 @@ def _check_date_match(last_date, END_DATE):
 
 
 def _add_one_day(date):
+    """Increases the date by one day using the datetime library"""
     date = datetime.datetime.strptime(date, '%Y-%m-%d')
     date = date + datetime.timedelta(days=1)
     date = date.strftime('%Y-%m-%d')
@@ -263,14 +281,14 @@ def _end_message():
 
 
 def main(AIRPORT, START_DATE, END_DATE):
-    row = [START_DATE]
+    last_date = START_DATE
     _write_headers()
     _start_message()
     date_match = False
     while date_match is False:
         URL = _url_builder(AIRPORT, START_DATE, END_DATE)
         soup_obj = _scrape_the_underground(URL)
-        last_date, row = _extract_table(soup_obj, row)
+        last_date = _extract_table(soup_obj, last_date)
         date_match, START_DATE = _check_date_match(
             last_date, END_DATE
         )
@@ -283,7 +301,7 @@ if __name__ == "__main__":
     # END_DATE = input("Enter an end date (YYYY-MM-DD): ")
     AIRPORT = 'KOAK'
     START_DATE = '1943-01-01'
-    END_DATE = '1944-01-01'
+    END_DATE = '2017-02-13'
     OUTPUT_FILENAME = "{}_{}_{}.csv".format(
         AIRPORT.upper(), START_DATE, END_DATE
     )
