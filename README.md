@@ -8,6 +8,7 @@ Author: Lawerence Lee
 
 * KOAK --> Metro Oakland International, CA
 * KTRK --> Truckee Tahoe Airport, CA
+* KTRM --> Jacqueline Cochran Regional Airport, Palm Springs, CA
 * KSFO  --> San Francisco International Airport, CA
 
 ## Description
