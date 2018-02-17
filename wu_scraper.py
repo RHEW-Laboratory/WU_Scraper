@@ -79,6 +79,43 @@ MONTH_DICT = {
 }
 
 
+def _insert_blank_records(row, current_date):
+    record_date = row['date']
+    while current_date != record_date:
+        BLANK_ROW[0] = current_date
+        _row_writer(BLANK_ROW)
+        current_date = _add_one_day(current_date)
+    _build_existing_row(row)
+    return _add_one_day(row['date'])
+
+
+def _build_existing_row(row_dict):
+    row = []
+    keys = row_dict.keys()
+    for key in keys:
+        row.append(row_dict[key])
+    _row_writer(row)
+
+
+def _add_missing_days():
+    filename = OUTPUT_FILENAME.split('/')[-1]
+    name, file_type = filename.split('.')
+    airport, start_date, end_date = name.split("_")
+    backup = name + '.backup'
+    os.replace(OUTPUT_FILENAME, backup)
+    _write_headers()
+    with open(backup) as csv_file:
+        reader = csv.DictReader(csv_file)
+        current_date = start_date
+        for row in reader:
+            if row['date'] == current_date:
+                _build_existing_row(row)
+                current_date = _add_one_day(row['date'])
+            elif row['date'] != current_date:
+                current_date = _insert_blank_records(row, current_date)
+    os.remove(backup)
+
+
 def clear():
     """Clears the command prompt"""
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -194,10 +231,10 @@ def _extract_table(soup_obj, last_date):
             # argument above is for the previous day. row[0] is the date.
             BLANK_ROW[0] = _add_one_day(last_date)
             ran_once = True
- 
+
         # Keep in mind the row we are working with currently
         # has not changed as we are in a while loop and have not exited
-        # the function at any time. We just keep increasing our 
+        # the function at any time. We just keep increasing our
         # BLANK_ROWS date by one day.
         _row_writer(BLANK_ROW)
 
@@ -205,7 +242,9 @@ def _extract_table(soup_obj, last_date):
         # If the current BLANK_ROW's date is one day after our END_DATE
         # go directly to the end_message function and safely exit the program.
         if BLANK_ROW[0] == _add_one_day(END_DATE):
-            _end_message()
+            _download_message()
+            _add_missing_days()
+            _complete_message()
             exit()
         URL = _url_builder(AIRPORT, BLANK_ROW[0], END_DATE)
         soup_obj = _scrape_the_underground(URL)
@@ -265,18 +304,35 @@ def _start_message():
         print("SCRIPT IS NOT BROKEN, DON'T WORRY")
 
 
-def _end_message():
+def _download_message():
     """Writes and says a finished download message."""
     clear()
     end_time = round(((time.time() - START_TIME) / 60), 2)
     finish_msg = 'Entire Download took: {} minutes'.format(end_time)
-    print("Finished Download")
-    print('Entire Download took: {} minutes'.format(end_time))
+    print("Finished Downloading")
+    print(finish_msg)
+    print('Begun adding missing days to CSV')
     try:
         os.system("say 'Download Complete'")
     except Exception:
         pass
-    else: 
+    else:
+        os.system("say '{}'".format(finish_msg))
+        os.system("say 'Adding missing days to CSV'")
+
+
+def _complete_message():
+    """Writes and says a script complete message."""
+    clear()
+    end_time = round(((time.time() - START_TIME) / 60), 2)
+    finish_msg = 'Entire process took: {} minutes'.format(end_time)
+    print("Finished script")
+    print(finish_msg)
+    try:
+        os.system("say 'Script Complete'")
+    except Exception:
+        pass
+    else:
         os.system("say '{}'".format(finish_msg))
 
 
@@ -292,7 +348,9 @@ def main(AIRPORT, START_DATE, END_DATE):
         date_match, START_DATE = _check_date_match(
             last_date, END_DATE
         )
-    _end_message()
+    _download_message()
+    _add_missing_days()
+    _complete_message()
 
 
 if __name__ == "__main__":
