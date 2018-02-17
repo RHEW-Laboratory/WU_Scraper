@@ -1,5 +1,5 @@
 """
-Title: Weather Underground Grabber
+Title: Weather Underground Scraper
 author: Lawerence Lee
 
 Description: This program scrapes airport weather data stored on Weather
