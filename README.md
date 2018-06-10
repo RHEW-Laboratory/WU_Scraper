@@ -2,7 +2,7 @@
 
 Title: Weather Underground Scraper
 
-Author: Lawerence Lee
+Author: Zach Owens
 
 ## Airport Code --> Airport
 
